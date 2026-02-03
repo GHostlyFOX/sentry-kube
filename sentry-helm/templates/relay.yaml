@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-relay
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: relay
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: relay
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: relay
+    spec:
+      containers:
+        - name: relay
+          image: "{{ .Values.images.relay.repository }}:{{ .Values.images.relay.tag }}"
+          imagePullPolicy: {{ .Values.images.relay.pullPolicy }}
+          command: ["/bin/relay", "run"]
+          ports:
+            - containerPort: 3000
+              name: http
+          volumeMounts:
+            - name: work
+              mountPath: /work/.relay
+            - name: geoip
+              mountPath: /geoip
+          readinessProbe:
+            httpGet:
+              path: /api/relay/healthcheck/
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: work
+          emptyDir: {} # Replaced by Secret or PVC if persistence/credentials needed
+        - name: geoip
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-relay
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: relay
+spec:
+  ports:
+    - port: 3000
+      targetPort: http
+      name: http
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: relay

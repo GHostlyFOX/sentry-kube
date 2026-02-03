@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-pgbouncer
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: pgbouncer
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: pgbouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: "{{ .Values.images.pgbouncer.repository }}:{{ .Values.images.pgbouncer.tag }}"
+          imagePullPolicy: {{ .Values.images.pgbouncer.pullPolicy }}
+          env:
+            - name: DB_USER
+              value: "postgres"
+            - name: DB_HOST
+              value: {{ include "sentry.fullname" . }}-postgres
+            - name: DB_NAME
+              value: "postgres"
+            - name: AUTH_TYPE
+              value: "trust"
+            - name: POOL_MODE
+              value: "transaction"
+            - name: ADMIN_USERS
+              value: "postgres,sentry"
+            - name: MAX_CLIENT_CONN
+              value: "10000"
+          ports:
+            - containerPort: 5432
+              name: pgbouncer
+          readinessProbe:
+            exec:
+              command: ["psql", "-U", "postgres", "-p", "5432", "-h", "127.0.0.1", "-c", "select 1;", "-d", "postgres"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-pgbouncer
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer
+spec:
+  ports:
+    - port: 5432
+      targetPort: pgbouncer
+      name: pgbouncer
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: pgbouncer

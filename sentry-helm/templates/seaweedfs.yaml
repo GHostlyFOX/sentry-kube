@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-seaweedfs
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seaweedfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: seaweedfs
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: seaweedfs
+    spec:
+      containers:
+        - name: seaweedfs
+          image: "{{ .Values.images.seaweedfs.repository }}:{{ .Values.images.seaweedfs.tag }}"
+          imagePullPolicy: {{ .Values.images.seaweedfs.pullPolicy }}
+          entrypoint: ["weed"]
+          command:
+            - server
+            - -dir=/data
+            - -filer=true
+            - -filer.port=8888
+            - -filer.port.grpc=18888
+            - -filer.defaultReplicaPlacement=000
+            - -master=true
+            - -master.port=9333
+            - -master.port.grpc=19333
+            - -metricsPort=9091
+            - -s3=true
+            - -s3.port=8333
+            - -s3.port.grpc=18333
+            - -volume=true
+            - -volume.dir.idx=/data/idx
+            - -volume.index=leveldbLarge
+            - -volume.max=0
+            - -volume.preStopSeconds=8
+            - -volume.readMode=redirect
+            - -volume.port=8080
+            - -volume.port.grpc=18080
+            - -ip=localhost
+            - -ip.bind=0.0.0.0
+            - -webdav=false
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "sentry"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "sentry"
+          ports:
+            - containerPort: 8333
+              name: s3
+            - containerPort: 9333
+              name: master
+            - containerPort: 8888
+              name: filer
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8333
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-seaweedfs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-seaweedfs
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: seaweedfs
+spec:
+  ports:
+    - port: 8333
+      targetPort: s3
+      name: s3
+    - port: 9333
+      targetPort: master
+      name: master
+    - port: 8888
+      targetPort: filer
+      name: filer
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: seaweedfs

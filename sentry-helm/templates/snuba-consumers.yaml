@@ -1,0 +1,38 @@
+{{- range .Values.snuba.consumers }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" $ }}-snuba-consumer-{{ .name }}
+  labels:
+    {{- include "sentry.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: snuba-consumer-{{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: snuba-consumer-{{ .name }}
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/component: snuba-consumer-{{ .name }}
+    spec:
+      containers:
+        - name: consumer
+          image: "{{ $.Values.images.snuba.repository }}:{{ $.Values.images.snuba.tag }}"
+          imagePullPolicy: {{ $.Values.images.snuba.pullPolicy }}
+          command: {{ .command | toJson }}
+          env:
+            - name: SNUBA_SETTINGS
+              value: "self_hosted"
+            - name: CLICKHOUSE_HOST
+              value: "{{ include "sentry.fullname" $ }}-clickhouse"
+            - name: CLICKHOUSE_PORT
+              value: "9000"
+            - name: DEFAULT_BROKERS
+              value: "{{ include "sentry.fullname" $ }}-kafka:9092"
+            - name: REDIS_HOST
+              value: "{{ include "sentry.fullname" $ }}-redis"
+---
+{{- end }}

@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "sentry.fullname" . }}-cleanup
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: cleanup
+spec:
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "sentry.selectorLabels" . | nindent 8 }}
+            app.kubernetes.io/component: cleanup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: "{{ .Values.images.cleanup.repository }}:{{ .Values.images.cleanup.tag }}"
+              imagePullPolicy: {{ .Values.images.cleanup.pullPolicy }}
+              command: ["/bin/bash", "-c"]
+              args: ["sentry cleanup --days $SENTRY_EVENT_RETENTION_DAYS"]
+              env:
+                - name: SENTRY_CONF
+                  value: "/etc/sentry"
+                - name: SENTRY_SYSTEM_SECRET_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "sentry.fullname" . }}-secret
+                      key: sentry-secret-key
+                - name: SENTRY_EVENT_RETENTION_DAYS
+                  value: {{ .Values.config.sentryEventRetentionDays | quote }}
+                - name: SNUBA
+                  value: "http://{{ include "sentry.fullname" . }}-snuba-api:1218"
+              volumeMounts:
+                - name: data
+                  mountPath: /data
+                - name: config
+                  mountPath: /etc/sentry
+          volumes:
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "sentry.fullname" . }}-data
+            - name: config
+              configMap:
+                name: {{ include "sentry.fullname" . }}-config
+                defaultMode: 0755

@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-snuba-api
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: snuba-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: snuba-api
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: snuba-api
+    spec:
+      containers:
+        - name: snuba-api
+          image: "{{ .Values.images.snuba.repository }}:{{ .Values.images.snuba.tag }}"
+          imagePullPolicy: {{ .Values.images.snuba.pullPolicy }}
+          env:
+            - name: SNUBA_SETTINGS
+              value: "self_hosted"
+            - name: CLICKHOUSE_HOST
+              value: "{{ include "sentry.fullname" . }}-clickhouse"
+            - name: CLICKHOUSE_PORT
+              value: "9000"
+            - name: DEFAULT_BROKERS
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: REDIS_HOST
+              value: "{{ include "sentry.fullname" . }}-redis"
+            - name: UWSGI_MAX_REQUESTS
+              value: "10000"
+            - name: UWSGI_DISABLE_LOGGING
+              value: "true"
+          ports:
+            - containerPort: 1218
+              name: http
+          readinessProbe:
+            tcpSocket:
+              port: 1218
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-snuba-api
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: snuba-api
+spec:
+  ports:
+    - port: 1218
+      targetPort: http
+      name: http
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: snuba-api

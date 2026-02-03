@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-data
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"] # Change to ReadWriteMany if scaling across nodes is needed and storage supports it
+  resources:
+    requests:
+      storage: {{ .Values.persistence.sentryData.size }}
+  {{- if .Values.persistence.sentryData.storageClass }}
+  storageClassName: {{ .Values.persistence.sentryData.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-symbolicator
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.symbolicator.size }}
+  {{- if .Values.persistence.symbolicator.storageClass }}
+  storageClassName: {{ .Values.persistence.symbolicator.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-vroom
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-taskbroker
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 1Gi

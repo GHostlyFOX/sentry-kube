@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-smtp
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: smtp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: smtp
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: smtp
+    spec:
+      containers:
+        - name: smtp
+          image: "{{ .Values.images.smtp.repository }}:{{ .Values.images.smtp.tag }}"
+          imagePullPolicy: {{ .Values.images.smtp.pullPolicy }}
+          env:
+            - name: MAILNAME
+              value: {{ .Values.config.mailHost | quote }}
+          ports:
+            - containerPort: 25
+              name: smtp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-smtp
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: smtp
+spec:
+  ports:
+    - port: 25
+      targetPort: smtp
+      name: smtp
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: smtp
