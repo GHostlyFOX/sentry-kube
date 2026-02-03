@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-uptime-checker
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: uptime-checker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: uptime-checker
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: uptime-checker
+    spec:
+      containers:
+        - name: uptime-checker
+          image: "{{ .Values.images.uptimeChecker.repository }}:{{ .Values.images.uptimeChecker.tag }}"
+          imagePullPolicy: {{ .Values.images.uptimeChecker.pullPolicy }}
+          args: ["run"]
+          env:
+            - name: UPTIME_CHECKER_RESULTS_KAFKA_CLUSTER
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: UPTIME_CHECKER_REDIS_HOST
+              value: "redis://{{ include "sentry.fullname" . }}-redis:6379"
+            - name: UPTIME_CHECKER_ALLOW_INTERNAL_IPS
+              value: "false"
+            - name: UPTIME_CHECKER_FAILURE_RETRIES
+              value: "1"

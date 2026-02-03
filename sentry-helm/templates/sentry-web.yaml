@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-web
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - name: web
+          image: "{{ .Values.images.sentry.repository }}:{{ .Values.images.sentry.tag }}"
+          imagePullPolicy: {{ .Values.images.sentry.pullPolicy }}
+          command: ["/etc/sentry/entrypoint.sh"]
+          args: ["run", "web"]
+          env:
+            - name: SENTRY_CONF
+              value: "/etc/sentry"
+            - name: SNUBA
+              value: "http://{{ include "sentry.fullname" . }}-snuba-api:1218"
+            - name: VROOM
+              value: "http://{{ include "sentry.fullname" . }}-vroom:8085"
+            - name: SENTRY_SYSTEM_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentry.fullname" . }}-secret
+                  key: sentry-secret-key
+            - name: C_FORCE_ROOT
+              value: "true" # Often needed if running as root
+          ports:
+            - containerPort: 9000
+              name: http
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/sentry
+            - name: geoip
+              mountPath: /geoip
+          readinessProbe:
+            httpGet:
+              path: /_health/
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-data
+        - name: config
+          configMap:
+            name: {{ include "sentry.fullname" . }}-config
+            defaultMode: 0755
+        - name: geoip
+          emptyDir: {} # TODO: Handle GeoIP download via initContainer or shared volume
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-web
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  ports:
+    - port: 9000
+      targetPort: http
+      name: http
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-vroom
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vroom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: vroom
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: vroom
+    spec:
+      containers:
+        - name: vroom
+          image: "{{ .Values.images.vroom.repository }}:{{ .Values.images.vroom.tag }}"
+          imagePullPolicy: {{ .Values.images.vroom.pullPolicy }}
+          env:
+            - name: SENTRY_KAFKA_BROKERS_PROFILING
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: SENTRY_KAFKA_BROKERS_OCCURRENCES
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: SENTRY_BUCKET_PROFILES
+              value: "s3://profiles?region=us-east-1&endpoint={{ include "sentry.fullname" . }}-seaweedfs:8333&s3ForcePathStyle=true&disableSSL=true"
+            - name: AWS_ACCESS_KEY
+              value: "sentry"
+            - name: AWS_SECRET_KEY
+              value: "sentry"
+            - name: SENTRY_SNUBA_HOST
+              value: "http://{{ include "sentry.fullname" . }}-snuba-api:1218"
+          ports:
+            - containerPort: 8085
+              name: http
+          volumeMounts:
+            - name: data
+              mountPath: /var/vroom/sentry-profiles
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-vroom
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-vroom
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vroom
+spec:
+  ports:
+    - port: 8085
+      targetPort: http
+      name: http
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: vroom

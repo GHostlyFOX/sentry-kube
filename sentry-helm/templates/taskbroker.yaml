@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-taskbroker
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: taskbroker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: taskbroker
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: taskbroker
+    spec:
+      containers:
+        - name: taskbroker
+          image: "{{ .Values.images.taskbroker.repository }}:{{ .Values.images.taskbroker.tag }}"
+          imagePullPolicy: {{ .Values.images.taskbroker.pullPolicy }}
+          env:
+            - name: TASKBROKER_KAFKA_CLUSTER
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: TASKBROKER_KAFKA_DEADLETTER_CLUSTER
+              value: "{{ include "sentry.fullname" . }}-kafka:9092"
+            - name: TASKBROKER_DB_PATH
+              value: "/opt/sqlite/taskbroker-activations.sqlite"
+          ports:
+            - containerPort: 50051
+              name: grpc
+          volumeMounts:
+            - name: data
+              mountPath: /opt/sqlite
+          readinessProbe:
+            tcpSocket:
+              port: 50051
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-taskbroker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-taskbroker
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: taskbroker
+spec:
+  ports:
+    - port: 50051
+      targetPort: grpc
+      name: grpc
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: taskbroker

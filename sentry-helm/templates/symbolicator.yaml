@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sentry.fullname" . }}-symbolicator
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: symbolicator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: symbolicator
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: symbolicator
+    spec:
+      containers:
+        - name: symbolicator
+          image: "{{ .Values.images.symbolicator.repository }}:{{ .Values.images.symbolicator.tag }}"
+          imagePullPolicy: {{ .Values.images.symbolicator.pullPolicy }}
+          command: ["/bin/symbolicator"]
+          args: ["run", "-c", "/etc/symbolicator/config.yml"]
+          ports:
+            - containerPort: 3021
+              name: http
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/symbolicator/config.yml
+              subPath: symbolicator-config.yml
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-symbolicator
+        - name: config
+          configMap:
+            name: {{ include "sentry.fullname" . }}-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-symbolicator
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: symbolicator
+spec:
+  ports:
+    - port: 3021
+      targetPort: http
+      name: http
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: symbolicator

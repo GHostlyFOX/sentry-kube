@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "sentry.fullname" . }}-clickhouse
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  serviceName: {{ include "sentry.fullname" . }}-clickhouse
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "sentry.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: clickhouse
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: "{{ .Values.images.clickhouse.repository }}:{{ .Values.images.clickhouse.tag }}"
+          imagePullPolicy: {{ .Values.images.clickhouse.pullPolicy }}
+          env:
+            - name: MAX_MEMORY_USAGE_RATIO
+              value: "0.3"
+          ports:
+            - containerPort: 8123
+              name: http
+            - containerPort: 9000
+              name: tcp
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/clickhouse
+            - name: config
+              mountPath: /etc/clickhouse-server/config.d/sentry.xml
+              subPath: clickhouse-config.xml
+            - name: config
+              mountPath: /etc/clickhouse-server/users.d/default-password.xml
+              subPath: clickhouse-users.xml
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "sentry.fullname" . }}-infra-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.persistence.clickhouse.size }}
+        {{- if .Values.persistence.clickhouse.storageClass }}
+        storageClassName: {{ .Values.persistence.clickhouse.storageClass }}
+        {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "sentry.fullname" . }}-clickhouse
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse
+spec:
+  ports:
+    - port: 8123
+      targetPort: http
+      name: http
+    - port: 9000
+      targetPort: tcp
+      name: tcp
+  selector:
+    {{- include "sentry.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: clickhouse

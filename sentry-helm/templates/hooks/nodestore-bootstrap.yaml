@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "sentry.fullname" . }}-nodestore-bootstrap
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nodestore-bootstrap
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        {{- include "sentry.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: nodestore-bootstrap
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: nodestore-bootstrap
+          image: "{{ .Values.images.sentry.repository }}:{{ .Values.images.sentry.tag }}"
+          imagePullPolicy: {{ .Values.images.sentry.pullPolicy }}
+          command: ["/etc/sentry/entrypoint.sh"]
+          args: ["sentry-nodestore-s3-tool", "bootstrap"]
+          env:
+            - name: SENTRY_CONF
+              value: "/etc/sentry"
+            - name: SENTRY_SYSTEM_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "sentry.fullname" . }}-secret
+                  key: sentry-secret-key
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /etc/sentry
+            - name: geoip
+              mountPath: /geoip
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "sentry.fullname" . }}-data
+        - name: config
+          configMap:
+            name: {{ include "sentry.fullname" . }}-config
+            defaultMode: 0755
+        - name: geoip
+          emptyDir: {}

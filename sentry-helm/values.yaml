@@ -1,0 +1,153 @@
+# Default values for sentry-helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  sentrySecretKey: "" # Generate one or provide it. Required.
+
+images:
+  sentry:
+    repository: getsentry/sentry
+    tag: 24.1.0 # Update to match your desired version
+    pullPolicy: IfNotPresent
+  snuba:
+    repository: getsentry/snuba
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+  relay:
+    repository: getsentry/relay
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+  symbolicator:
+    repository: getsentry/symbolicator
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+  vroom:
+    repository: getsentry/vroom
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+  nginx:
+    repository: nginx
+    tag: 1.29.1-alpine
+    pullPolicy: IfNotPresent
+  postgres:
+    repository: postgres
+    tag: 14.19-bookworm
+    pullPolicy: IfNotPresent
+  redis:
+    repository: redis
+    tag: 6.2.20-alpine
+    pullPolicy: IfNotPresent
+  kafka:
+    repository: confluentinc/cp-kafka
+    tag: 7.6.6
+    pullPolicy: IfNotPresent
+  clickhouse:
+    repository: altinity/clickhouse-server
+    tag: 25.3.6.10034.altinitystable
+    pullPolicy: IfNotPresent
+  seaweedfs:
+    repository: chrislusf/seaweedfs
+    tag: 3.97_large_disk
+    pullPolicy: IfNotPresent
+  memcached:
+    repository: memcached
+    tag: 1.6.26-alpine
+    pullPolicy: IfNotPresent
+  smtp:
+    repository: registry.gitlab.com/egos-tech/smtp
+    tag: latest
+    pullPolicy: IfNotPresent
+  pgbouncer:
+    repository: edoburu/pgbouncer
+    tag: v1.24.1-p1
+    pullPolicy: IfNotPresent
+  taskbroker:
+    repository: getsentry/sentry
+    tag: 24.1.0 # Verify if this uses sentry image or separate
+    pullPolicy: IfNotPresent
+  uptimeChecker:
+    repository: getsentry/sentry
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+  cleanup:
+    repository: getsentry/sentry
+    tag: 24.1.0
+    pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 9000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: sentry.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+persistence:
+  postgres:
+    size: 10Gi
+    storageClass: ""
+  clickhouse:
+    size: 20Gi
+    storageClass: ""
+  kafka:
+    size: 10Gi
+    storageClass: ""
+  redis:
+    size: 1Gi
+    storageClass: ""
+  seaweedfs:
+    size: 50Gi
+    storageClass: ""
+  sentryData:
+    size: 10Gi
+    storageClass: ""
+  symbolicator:
+    size: 10Gi
+    storageClass: ""
+
+config:
+  sentryEventRetentionDays: "90"
+  mailHost: "smtp"
+  systemUrlPrefix: "http://localhost:9000"
+
+# Kafka Config
+kafka:
+  clusterId: "MkU3OEVBNTcwNTJENDM2Qk"
+
+# Snuba Consumers
+snuba:
+  consumers:
+    - name: transactions-consumer
+      command: ["rust-consumer", "--storage", "transactions", "--consumer-group", "transactions_group", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+    - name: outcomes-consumer
+      command: ["rust-consumer", "--storage", "outcomes_raw", "--consumer-group", "snuba-consumers", "--auto-offset-reset=earliest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+    - name: errors-consumer
+      command: ["rust-consumer", "--storage", "errors", "--consumer-group", "snuba-consumers", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+    # Add other consumers as needed from docker-compose
+
+# Sentry Consumers
+sentry:
+  consumers:
+    - name: ingest-events
+      command: ["run", "consumer", "ingest-events", "--consumer-group", "ingest-consumer"]
+    - name: ingest-transactions
+      command: ["run", "consumer", "ingest-transactions", "--consumer-group", "ingest-consumer"]
+    - name: taskworker
+      command: ["run", "taskworker", "--concurrency=4", "--rpc-host=taskbroker:50051"]
+    - name: taskscheduler
+      command: ["run", "taskworker-scheduler"]
+    - name: events-consumer
+      command: ["run", "consumer", "ingest-events", "--consumer-group", "ingest-consumer"]
+    - name: attachments-consumer
+      command: ["run", "consumer", "ingest-attachments", "--consumer-group", "ingest-consumer"]
+    - name: post-process-forwarder-errors
+      command: ["run", "consumer", "--no-strict-offset-reset", "post-process-forwarder-errors", "--consumer-group", "post-process-forwarder", "--synchronize-commit-log-topic=snuba-commit-log", "--synchronize-commit-group=snuba-consumers"]
+    # Add other consumers as needed from docker-compose
