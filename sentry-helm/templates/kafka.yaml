@@ -68,6 +68,7 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data
+              subPath: data
           readinessProbe:
             exec:
               command: ["nc", "-z", "localhost", "9092"]

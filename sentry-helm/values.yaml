@@ -142,11 +142,11 @@ kafka:
 snuba:
   consumers:
     - name: transactions-consumer
-      command: ["rust-consumer", "--storage", "transactions", "--consumer-group", "transactions_group", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+      command: ["/usr/bin/snuba", "consumer", "--storage", "transactions", "--consumer-group", "transactions_group", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
     - name: outcomes-consumer
-      command: ["rust-consumer", "--storage", "outcomes_raw", "--consumer-group", "snuba-consumers", "--auto-offset-reset=earliest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+      command: ["/usr/bin/snuba", "consumer", "--storage", "outcomes_raw", "--consumer-group", "snuba-consumers", "--auto-offset-reset=earliest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
     - name: errors-consumer
-      command: ["rust-consumer", "--storage", "errors", "--consumer-group", "snuba-consumers", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
+      command: ["/usr/bin/snuba", "consumer", "--storage", "errors", "--consumer-group", "snuba-consumers", "--auto-offset-reset=latest", "--max-batch-time-ms", "750", "--no-strict-offset-reset"]
     # Add other consumers as needed from docker-compose
 
 # Sentry Consumers

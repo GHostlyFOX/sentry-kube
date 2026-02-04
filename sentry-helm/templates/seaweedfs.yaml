@@ -21,8 +21,8 @@ spec:
         - name: seaweedfs
           image: "{{ .Values.images.seaweedfs.repository }}:{{ .Values.images.seaweedfs.tag }}"
           imagePullPolicy: {{ .Values.images.seaweedfs.pullPolicy }}
-          entrypoint: ["weed"]
           command:
+            - /usr/bin/weed
             - server
             - -dir=/data
             - -filer=true
