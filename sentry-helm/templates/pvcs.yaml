@@ -51,3 +51,63 @@ spec:
   resources:
     requests:
       storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-kafka
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.kafka.size }}
+  {{- if .Values.persistence.kafka.storageClass }}
+  storageClassName: {{ .Values.persistence.kafka.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-postgres
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.postgres.size }}
+  {{- if .Values.persistence.postgres.storageClass }}
+  storageClassName: {{ .Values.persistence.postgres.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-redis
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.redis.size }}
+  {{- if .Values.persistence.redis.storageClass }}
+  storageClassName: {{ .Values.persistence.redis.storageClass }}
+  {{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sentry.fullname" . }}-seaweedfs
+  labels:
+    {{- include "sentry.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ .Values.persistence.seaweedfs.size }}
+  {{- if .Values.persistence.seaweedfs.storageClass }}
+  storageClassName: {{ .Values.persistence.seaweedfs.storageClass }}
+  {{- end }}
