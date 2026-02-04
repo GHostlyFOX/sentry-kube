@@ -3,7 +3,27 @@ entries:
   sentry:
   - apiVersion: v2
     appVersion: 24.1.0
-    created: "2026-02-04T09:47:53.616083605+05:00"
+    created: "2026-02-04T11:15:39.882249727+05:00"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: e13fc9f52b8b5226a0111995c1b8d18e9e9b586dd77759559bd9047193d95083
+    name: sentry
+    type: application
+    urls:
+    - https://GHostlyFOX.github.io/sentry-kube/sentry-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T11:15:39.889248902+05:00"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: e13fc9f52b8b5226a0111995c1b8d18e9e9b586dd77759559bd9047193d95083
+    name: sentry
+    type: application
+    urls:
+    - https://GHostlyFOX.github.io/sentry-kube/_charts/sentry-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T11:15:39.880449242+05:00"
     description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
     digest: 644c10a196b411f17ed183973f73491da631a7b9da65625985f4e2c44ff63825
     name: sentry
@@ -11,4 +31,34 @@ entries:
     urls:
     - https://GHostlyFOX.github.io/sentry-kube/sentry-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-04T09:47:53.613249096+05:00"
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T11:15:39.886827619+05:00"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: 644c10a196b411f17ed183973f73491da631a7b9da65625985f4e2c44ff63825
+    name: sentry
+    type: application
+    urls:
+    - https://GHostlyFOX.github.io/sentry-kube/_charts/sentry-0.1.0.tgz
+    version: 0.1.0
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T11:15:39.891669755+05:00"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: b1f33c8c123feb73999c9c0de458332d4f50a110ff6ee45e3d7445c3d8fb3071
+    name: sentry
+    type: application
+    urls:
+    - https://GHostlyFOX.github.io/sentry-kube/charts/sentry-0.1.0.tgz
+    version: 0.1.0
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T11:15:39.89307998+05:00"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: 644c10a196b411f17ed183973f73491da631a7b9da65625985f4e2c44ff63825
+    name: sentry
+    type: application
+    urls:
+    - https://GHostlyFOX.github.io/sentry-kube/gh-pages/sentry-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-02-04T11:15:39.877962327+05:00"
