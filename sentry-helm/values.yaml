@@ -4,28 +4,37 @@
 
 global:
   sentrySecretKey: "" # Generate one or provide it. Required.
+  nodeSelector: {}
+  tolerations: []
+  sidecars: []
+  volumes: []
 
 images:
   sentry:
     repository: getsentry/sentry
     tag: 24.1.0 # Update to match your desired version
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   snuba:
     repository: getsentry/snuba
     tag: 24.1.0
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   relay:
     repository: getsentry/relay
     tag: 24.1.0
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   symbolicator:
     repository: getsentry/symbolicator
     tag: 24.1.0
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   vroom:
     repository: getsentry/vroom
     tag: 24.1.0
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   nginx:
     repository: nginx
     tag: 1.29.1-alpine
@@ -66,10 +75,12 @@ images:
     repository: getsentry/sentry
     tag: 24.1.0 # Verify if this uses sentry image or separate
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   uptimeChecker:
     repository: getsentry/sentry
     tag: 24.1.0
     pullPolicy: IfNotPresent
+    imagePullSecrets: []
   cleanup:
     repository: getsentry/sentry
     tag: 24.1.0
@@ -78,6 +89,7 @@ images:
 service:
   type: ClusterIP
   port: 9000
+  annotations: {}
 
 ingress:
   enabled: false
@@ -95,7 +107,7 @@ persistence:
     size: 10Gi
     storageClass: ""
   clickhouse:
-    size: 20Gi
+    size: 400Gi
     storageClass: ""
   kafka:
     size: 10Gi
@@ -115,8 +127,12 @@ persistence:
 
 config:
   sentryEventRetentionDays: "90"
-  mailHost: "smtp"
-  systemUrlPrefix: "http://localhost:9000"
+  mailHost: "mail.oma.kz"
+  systemUrlPrefix: "https://sentry.oma.kz"
+  mailPort: 587
+  mailFrom: "Sentry <sentry@oma.kz>"
+  mailUsername: "sentry@oma.kz"
+  mailUseTls: true
 
 # Kafka Config
 kafka:
