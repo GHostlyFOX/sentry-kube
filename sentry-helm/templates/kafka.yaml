@@ -68,6 +68,15 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/kafka/data
+              # Mount a subdirectory within the persistent volume to avoid
+              # creating files such as lost+found at the root of the
+              # filesystem. When Kafka starts, it expects the data
+              # directory to contain only topic directories and will
+              # refuse to start if other files are present. Using
+              # subPath ensures Kubernetes creates this directory and
+              # mounts only that subdirectory, keeping the Kafka
+              # datastore clean.
+              subPath: kafka
           readinessProbe:
             exec:
               command: ["nc", "-z", "localhost", "9092"]

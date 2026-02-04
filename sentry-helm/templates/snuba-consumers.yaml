@@ -22,7 +22,15 @@ spec:
         - name: consumer
           image: "{{ $.Values.images.snuba.repository }}:{{ $.Values.images.snuba.tag }}"
           imagePullPolicy: {{ $.Values.images.snuba.pullPolicy }}
-          command: {{ .command | toJson }}
+          # Run the snuba CLI explicitly. Commands defined in values.yaml
+          # (e.g. ["rust-consumer", "--storage", "errors", ...]) are passed as
+          # arguments to snuba. Without this prefix, Kubernetes would try to
+          # execute the subcommand directly (e.g. `rust-consumer`) and fail
+          # with an "executable not found" error. Prefixing with "snuba"
+          # ensures that the correct entrypoint is invoked.
+          command:
+            - "snuba"
+          args: {{ .command | toJson }}
           env:
             - name: SNUBA_SETTINGS
               value: "self_hosted"

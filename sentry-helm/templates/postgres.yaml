@@ -31,6 +31,12 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
+              # Use a subPath to avoid unexpected system directories (e.g. lost+found)
+              # appearing at the root of the volume. PostgreSQL initialization
+              # fails if the data directory is not empty, so mounting a
+              # dedicated subdirectory ensures the directory is initially
+              # empty and only contains database files.
+              subPath: postgres
           readinessProbe:
             exec:
               command: ["pg_isready", "-U", "postgres"]
