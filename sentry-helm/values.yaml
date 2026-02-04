@@ -157,9 +157,9 @@ sentry:
     - name: ingest-transactions
       command: ["run", "consumer", "ingest-transactions", "--consumer-group", "ingest-consumer"]
     - name: taskworker
-      command: ["run", "taskworker", "--concurrency=4", "--rpc-host=taskbroker:50051"]
+      command: ["run", "worker", "--concurrency=4"]
     - name: taskscheduler
-      command: ["run", "taskworker-scheduler"]
+      command: ["run", "cron"]
     - name: events-consumer
       command: ["run", "consumer", "ingest-events", "--consumer-group", "ingest-consumer"]
     - name: attachments-consumer
