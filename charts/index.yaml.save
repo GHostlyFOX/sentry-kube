@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  sentry-helm:
+    - apiVersion: v2
+      appVersion: X.X.X
+      created: "2026-02-04T00:00:00.000Z"
+      description: A Helm chart for deploying Sentry on Kubernetes
+      digest: abc123...  # Автоматически генерируется
+      name: sentry-helm
+      type: application
+      urls:
+        - https://github.com/GHostlyFOX/sentry-kube/releases/latest/download/sentry-helm-X.X.X.tgz
+      version: X.X.X
+generated: "2026-02-04T00:00:00.000Z"
