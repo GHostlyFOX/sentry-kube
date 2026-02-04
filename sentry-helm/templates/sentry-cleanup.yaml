@@ -12,7 +12,7 @@ spec:
       template:
         metadata:
           labels:
-            {{- include "sentry.selectorLabels" . | nindent 8 }}
+            {{- include "sentry.selectorLabels" . | nindent 12 }}
             app.kubernetes.io/component: cleanup
         spec:
           restartPolicy: OnFailure
