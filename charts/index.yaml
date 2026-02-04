@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  sentry:
+  - apiVersion: v2
+    appVersion: 24.1.0
+    created: "2026-02-04T04:50:35.214992672Z"
+    description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
+    digest: 085c895a6f324bdd8240f6fcd3d1af0ed791857df5c26029451a0dc23f365e11
+    name: sentry
+    type: application
+    urls:
+    - sentry-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-02-04T04:50:35.213020863Z"
