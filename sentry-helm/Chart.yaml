@@ -2,5 +2,5 @@ apiVersion: v2
 name: sentry
 description: A Helm chart for deploying Sentry based on sentry-origin docker-compose
 type: application
-version: 0.1.5
+version: 0.1.6
 appVersion: "24.1.0" # Approximation based on recent self-hosted versions, user should update
