@@ -21,7 +21,13 @@ spec:
         - name: relay
           image: "{{ .Values.images.relay.repository }}:{{ .Values.images.relay.tag }}"
           imagePullPolicy: {{ .Values.images.relay.pullPolicy }}
-          command: ["/bin/relay", "run"]
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              if [ ! -f /work/.relay/credentials.json ]; then
+                relay credentials generate > /work/.relay/credentials.json
+              fi
+              /bin/relay run
           ports:
             - containerPort: 3000
               name: http
