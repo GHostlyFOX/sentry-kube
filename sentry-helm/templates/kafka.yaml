@@ -17,6 +17,10 @@ spec:
         {{- include "sentry.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: kafka
     spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsGroup: 1000
       containers:
         - name: kafka
           image: "{{ .Values.images.kafka.repository }}:{{ .Values.images.kafka.tag }}"
