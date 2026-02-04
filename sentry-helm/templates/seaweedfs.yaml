@@ -21,14 +21,8 @@ spec:
         - name: seaweedfs
           image: "{{ .Values.images.seaweedfs.repository }}:{{ .Values.images.seaweedfs.tag }}"
           imagePullPolicy: {{ .Values.images.seaweedfs.pullPolicy }}
-          # Weed provides multiple subcommands (server, filer, volume, etc.).
-          # Use the weed binary as the command and pass the "server" subcommand
-          # as the first argument. Without this structure, Kubernetes will try
-          # to execute the subcommand itself (e.g. "server"), which does not
-          # exist as a standalone binary and results in an exec error.
           command:
-            - weed
-          args:
+            - /usr/bin/weed
             - server
             - -dir=/data
             - -filer=true
