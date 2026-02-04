@@ -21,7 +21,16 @@ spec:
         - name: snuba-bootstrap
           image: "{{ .Values.images.snuba.repository }}:{{ .Values.images.snuba.tag }}"
           imagePullPolicy: {{ .Values.images.snuba.pullPolicy }}
-          command: ["snuba", "bootstrap", "--force"]
+          # Run the initial Snuba bootstrap without running migrations and then apply migrations.
+          # Using --no-migrate with bootstrap and running the migration command explicitly
+          # helps avoid issues where ClickHouse tables or distributed views (e.g. *_dist tables)
+          # are missing after installation【126461625488069†L55-L96】.
+          command:
+            - /bin/sh
+            - "-c"
+            - >-
+              snuba bootstrap --no-migrate --force && \
+              snuba migrations migrate --force
           env:
             - name: SNUBA_SETTINGS
               value: "self_hosted"

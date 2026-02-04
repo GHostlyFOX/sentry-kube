@@ -44,7 +44,9 @@ images:
     pullPolicy: IfNotPresent
   clickhouse:
     repository: altinity/clickhouse-server
-    tag: 25.3.6.10034.altinitystable
+    # Use the ClickHouse version recommended by Snuba documentation. 
+    # Snuba only guarantees compatibility with the 23.8.11.29 Altinity stable build?129295100136803†L3-L12?.
+    tag: 23.8.11.29.altinitystable
     pullPolicy: IfNotPresent
   seaweedfs:
     repository: chrislusf/seaweedfs
